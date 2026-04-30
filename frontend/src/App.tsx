@@ -44,7 +44,7 @@ export default function InterviewGuide() {
 
         // Fetch categories
         const categoriesResponse = await fetch(
-          "http://localhost:3001/api/categories",
+          "http://localhost:3000/api/categories",
         );
         if (!categoriesResponse.ok)
           throw new Error("Failed to fetch categories");
@@ -53,7 +53,7 @@ export default function InterviewGuide() {
 
         // Fetch questions
         const questionsResponse = await fetch(
-          "http://localhost:3001/api/questions",
+          "http://localhost:3000/api/questions",
         );
         if (!questionsResponse.ok) throw new Error("Failed to fetch questions");
         const questionsData = await questionsResponse.json();
@@ -63,7 +63,7 @@ export default function InterviewGuide() {
           questionsData.map(async (question: Question) => {
             try {
               const answersResponse = await fetch(
-                `http://localhost:3001/api/answers/${question.id}`,
+                `http://localhost:3000/api/answers/${question.id}`,
               );
               const answers = answersResponse.ok
                 ? await answersResponse.json()
