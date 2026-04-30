@@ -1,0 +1,310 @@
+[
+  {
+    "id": "laravel-core",
+    "label": "Laravel Core",
+    "icon": "🔴",
+    "color": "#FF4444",
+    "questions": [
+      {
+        "q": "ما الفرق بين Service Container و Service Provider؟",
+        "a": "Service Container هو نظام dependency injection في Laravel — يُعنى بـ binding وresolving الكلاسات.\nService Provider هو المكان الذي تُسجّل فيه هذه الـ bindings وتُهيئ مكونات التطبيق.\n\nمثال:\n• Container: يعرف كيف يبني كلاس Logger\n• Provider: يخبر الـ Container \"استخدم FileLogger عند طلب LoggerInterface\""
+      },
+      {
+        "q": "اشرح Service Container و Dependency Injection بعمق",
+        "a": "Dependency Injection = تمرير التبعيات للكلاس بدلاً من أن ينشئها بنفسه.\n\nLaravel Container يدعم:\n1. Binding: app()->bind(Interface::class, Implementation::class)\n2. Singleton: app()->singleton(...) — نسخة واحدة طوال الـ request\n3. Auto-resolution: يحل الـ type hints تلقائياً من constructor\n4. Contextual Binding: نفس الـ Interface لكن تطبيق مختلف حسب السياق"
+      },
+      {
+        "q": "ما هو Eloquent ORM وما مزاياه وعيوبه؟",
+        "a": "المزايا:\n• كود قابل للقراءة وسريع التطوير\n• Relationships بسيطة (hasMany, belongsTo...)\n• Mutators, Accessors, Observers\n• Soft Deletes و Timestamps تلقائية\n\nالعيوب:\n• N+1 Problem إن لم تستخدم eager loading\n• أبطأ من Query Builder لعمليات bulk\n• يصعب تحسين الأداء في queries معقدة\n\nالحل: استخدم with() للـ eager loading، وQuery Builder للعمليات الثقيلة"
+      },
+      {
+        "q": "ما هو N+1 Problem وكيف تحله؟",
+        "a": "يحدث عندما تجلب N record ثم تُنفّذ query إضافية لكل record.\n\nمثال المشكلة:\n$posts = Post::all(); // 1 query\nforeach ($posts as $post) {\n  echo $post->user->name; // N queries!\n}\n\nالحل - Eager Loading:\n$posts = Post::with('user')->get(); // query واحدة فقط\n\nيمكن اكتشافه بـ:\n• Laravel Debugbar\n• Telescope\n• withCount() بدل العد اليدوي"
+      },
+      {
+        "q": "ما الفرق بين Middleware و Policy و Gate؟",
+        "a": "Middleware: يعمل على مستوى الـ HTTP request قبل وصوله للـ controller\n→ مثال: التحقق من تسجيل الدخول، CORS، Rate Limiting\n\nGate: تحقق بسيط من صلاحية action معين\n→ مثال: Gate::define('edit-post', fn($user, $post) => $user->id === $post->user_id)\n\nPolicy: كلاس منظّم للصلاحيات المتعلقة بـ Model بعينه\n→ مثال: PostPolicy تحتوي view, create, update, delete"
+      },
+      {
+        "q": "كيف تعمل Laravel Queues وما فائدتها؟",
+        "a": "Queues تُؤجّل تنفيذ المهام الثقيلة خارج الـ HTTP request lifecycle.\n\nالفائدة: تسريع الـ response للمستخدم\n\nكيف تعمل:\n1. Job يُدفع للـ Queue: dispatch(new SendEmailJob($user))\n2. Worker يسحب الـ Job وينفّذه: php artisan queue:work\n\nDrivers المتاحة: database, Redis, SQS, Beanstalkd\n\nمفاهيم مهمة:\n• Retry: عدد مرات إعادة المحاولة عند الفشل\n• Delay: تأجيل الـ Job\n• Horizon: واجهة مرئية لـ Redis queues"
+      },
+      {
+        "q": "ما هو Observer Pattern في Laravel؟",
+        "a": "Observer يُراقب أحداث الـ Eloquent Model (creating, created, updating, updated, deleting...)\n\nمثال:\nclass OrderObserver {\n  public function created(Order $order) {\n    // إرسال إشعار عند إنشاء طلب\n  }\n}\n\n// في ServiceProvider:\nOrder::observe(OrderObserver::class);\n\nالفائدة: فصل الـ business logic عن الـ Model"
+      },
+      {
+        "q": "ما الفرق بين hasOne و belongsTo؟",
+        "a": "hasOne: الكلاس الحالي يمتلك كلاساً آخر (المفتاح الأجنبي في الجدول الآخر)\nUser hasOne Profile → في جدول profiles: user_id\n\nbelongsTo: الكلاس الحالي يتبع كلاساً آخر (المفتاح الأجنبي هنا)\nProfile belongsTo User → في جدول profiles: user_id\n\nالقاعدة: من عنده foreign key يكتب belongsTo"
+      },
+      {
+        "q": "ما هو Repository Pattern ولماذا يُستخدم في Laravel؟",
+        "a": "Repository يفصل منطق الوصول للبيانات عن الـ Business Logic.\n\ninterface UserRepositoryInterface {\n  public function find(int $id): User;\n  public function create(array $data): User;\n}\n\nclass EloquentUserRepository implements UserRepositoryInterface { ... }\n\nالفوائد:\n• سهولة التبديل بين مصادر البيانات\n• اختبار الكود بسهولة (Mock)\n• كود أنظف وأقل تكراراً"
+      },
+      {
+        "q": "كيف تتعامل مع Database Transactions؟",
+        "a": "DB::transaction(function () {\n  $order = Order::create([...]);\n  $payment = Payment::create([...]);\n  // إذا حدث exception، سيتم Rollback تلقائياً\n});\n\nأو يدوياً:\nDB::beginTransaction();\ntry {\n  // operations\n  DB::commit();\n} catch (Exception $e) {\n  DB::rollBack();\n}\n\nمهم: استخدمها عند تغيير بيانات متعددة مترابطة"
+      }
+    ]
+  },
+  {
+    "id": "laravel-advanced",
+    "label": "Laravel Advanced",
+    "icon": "🟠",
+    "color": "#FF8C00",
+    "questions": [
+      {
+        "q": "كيف تُحسّن أداء Laravel في الإنتاج؟",
+        "a": "1. Caching:\n   • Route cache: php artisan route:cache\n   • Config cache: php artisan config:cache\n   • View cache: php artisan view:cache\n   • Query cache باستخدام Redis\n\n2. Eager Loading لحل N+1\n\n3. Indexing على أعمدة قواعد البيانات المستخدمة in WHERE\n\n4. Queue للعمليات الثقيلة\n\n5. Horizon + Redis لمراقبة الـ queues\n\n6. Octane (Swoole/RoadRunner) لتسريع جذري"
+      },
+      {
+        "q": "ما هو Event Sourcing وهل طبّقته؟",
+        "a": "بدلاً من حفظ الحالة النهائية، نحفظ كل الأحداث التي أدت إليها.\n\nمثال: بدلاً من حفظ balance = 500\nنحفظ:\n- AccountCreated (balance: 0)\n- MoneyDeposited (amount: 600)\n- MoneyWithdrawn (amount: 100)\n\nالفوائد: Audit log كامل، إمكانية replay الأحداث\nالأدوات في Laravel: spatie/laravel-event-sourcing"
+      },
+      {
+        "q": "ما هو CQRS Pattern؟",
+        "a": "Command Query Responsibility Segregation\n\nفصل عمليات الكتابة (Commands) عن القراءة (Queries):\n\nCommand: ينفّذ عملية ويغيّر الحالة (لا يُرجع بيانات)\nQuery: يقرأ البيانات فقط (لا يغيّر الحالة)\n\nالفائدة: كل طرف يمكن تحسينه وتوسيعه باستقلالية\n→ مثال: قاعدة بيانات للكتابة، وأخرى مُحسّنة للقراءة"
+      },
+      {
+        "q": "كيف تتعامل مع API Rate Limiting؟",
+        "a": "في Laravel عبر Middleware:\n\n// في RouteServiceProvider\nRateLimiter::for('api', function (Request $request) {\n  return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());\n});\n\n// في routes\nRoute::middleware(['throttle:api'])->group(...);\n\nمستويات متقدمة:\n• حدود مختلفة لـ authenticated vs guest\n• Dynamic limits حسب نوع المستخدم\n• Redis لتخزين العدادات"
+      },
+      {
+        "q": "ما هو Lazy Loading vs Eager Loading vs Lazy Eager Loading؟",
+        "a": "Lazy Loading (افتراضي):\n$post->user // query عند الوصول أول مرة فقط\n\nEager Loading:\nPost::with('user')->get() // تحميل مع الـ query الأساسية\n\nLazy Eager Loading:\n$posts = Post::all();\n$posts->load('user'); // تحميل لاحق بـ query واحدة\n\nمتى تستخدم كل واحدة؟\n• Eager: تعرف أنك ستحتاج العلاقة\n• Lazy Eager: قررت لاحقاً أنك تحتاجها\n• Lazy: علاقة نادر الاحتياج إليها"
+      }
+    ]
+  },
+  {
+    "id": "backend-general",
+    "label": "Backend عام",
+    "icon": "🟢",
+    "color": "#00C853",
+    "questions": [
+      {
+        "q": "ما الفرق بين REST و GraphQL؟",
+        "a": "REST:\n• Endpoints محددة لكل resource\n• قد تُرجع بيانات أكثر أو أقل مما تحتاج\n• سهل التخزين المؤقت (Caching)\n• أبسط في الاستخدام للـ simple APIs\n\nGraphQL:\n• Query واحدة تجلب بالضبط ما تحتاجه\n• تحل Over-fetching و Under-fetching\n• أصعب في الـ Caching\n• مثالي للـ complex data requirements وتطبيقات Mobile"
+      },
+      {
+        "q": "ما هو SOLID وكيف تطبّقه؟",
+        "a": "S - Single Responsibility: كل كلاس مسؤولية واحدة\nO - Open/Closed: مفتوح للتمديد، مغلق للتعديل\nL - Liskov Substitution: الـ subclass قابل للاستبدال بـ parent\nI - Interface Segregation: interfaces صغيرة ومحددة\nD - Dependency Inversion: اعتمد على abstractions لا implementations\n\nأهمها عملياً في Laravel:\n• S: افصل الـ Services عن Controllers\n• D: حقن Interfaces وليس Classes مباشرة"
+      },
+      {
+        "q": "ما هو الفرق بين SQL و NoSQL؟",
+        "a": "SQL (Relational):\n• بيانات منظمة في جداول وعلاقات\n• ACID transactions\n• مثالي للبيانات ذات العلاقات المعقدة\n• أمثلة: MySQL, PostgreSQL\n\nNoSQL:\n• مرونة في الـ schema\n• أداء أعلى في الـ write-heavy ops\n• أنواع: Document (MongoDB), Key-Value (Redis), Column (Cassandra)\n• مثالي للبيانات الضخمة وغير المنتظمة\n\nالاختيار يعتمد على طبيعة البيانات والـ use case"
+      },
+      {
+        "q": "كيف تصمم نظام Authentication آمن؟",
+        "a": "1. كلمات المرور: bcrypt/argon2 (لا MD5/SHA1 أبداً)\n2. HTTPS إلزامي لكل الـ endpoints\n3. JWT: قصير الصلاحية + Refresh Tokens\n4. Rate Limiting على login endpoint\n5. 2FA للحسابات الحساسة\n6. لا تُرجع معلومات توضح إن كان الـ email موجوداً\n7. HttpOnly Cookies للـ tokens (لا localStorage)\n8. CSRF Protection للـ form-based auth"
+      },
+      {
+        "q": "ما هو Database Indexing وكيف تختار الـ Index؟",
+        "a": "Index = بنية بيانات تُسرّع البحث مقابل تبطيء الكتابة.\n\nمتى تضيف Index:\n• الأعمدة في WHERE كثيراً\n• الأعمدة في ORDER BY\n• Foreign Keys\n\nأنواع:\n• Single Column: على عمود واحد\n• Composite: على أكثر من عمود (الترتيب مهم!)\n• Unique Index: يمنع التكرار\n\nتجنّب:\n• فهرسة أعمدة ذات cardinality منخفض (مثل: gender)\n• فهرسة زائدة تُبطئ الكتابة"
+      },
+      {
+        "q": "ما هي ACID Properties؟",
+        "a": "Atomicity: كل العمليات تنجح أو كلها تفشل (لا نصف عملية)\nConsistency: البيانات تبقى في حالة صحيحة دائماً\nIsolation: الـ transactions المتزامنة لا تتداخل\nDurability: البيانات المحفوظة لا تُفقد حتى عند الأعطال\n\nمثال عملي: تحويل بنكي\n1. Atomicity: خصم + إضافة يحدثان معاً أو لا يحدثان\n2. Consistency: المجموع الكلي لا يتغير\n3. Isolation: تحويلان متزامنان لا يتضاربان\n4. Durability: بعد التأكيد، التحويل محفوظ نهائياً"
+      },
+      {
+        "q": "ما هو Caching وما أنواعه؟",
+        "a": "Application Cache (Redis/Memcached):\n• بيانات مؤقتة في الذاكرة\n• Cache::remember('key', ttl, fn() => ...)\n\nHTTP Cache:\n• Cache-Control headers\n• ETag و Last-Modified\n\nDatabase Query Cache:\n• تخزين نتائج queries متكررة\n\nCDN Cache:\n• تخزين static assets قريباً من المستخدم\n\nاستراتيجيات الإلغاء:\n• TTL: انتهاء صلاحية تلقائي\n• Cache Tags: إلغاء مجموعة مترابطة\n• Cache Busting: تغيير الـ key عند تحديث البيانات"
+      },
+      {
+        "q": "كيف تتعامل مع Concurrency وRace Conditions؟",
+        "a": "Race Condition: نتيجة تعتمد على ترتيب غير محدد لعمليات متزامنة\n\nالحلول:\n1. Database Locks:\n   Post::where('id', $id)->lockForUpdate()->first();\n\n2. Atomic Operations:\n   DB::table('accounts')->increment('balance', 100);\n\n3. Redis Locks (Distributed):\n   Cache::lock('key', 10)->block(5, function() { ... });\n\n4. Queue: تحويل العمليات المتزامنة إلى متسلسلة"
+      },
+      {
+        "q": "ما هو الفرق بين Monolith و Microservices؟",
+        "a": "Monolith:\n+ أبسط في البداية والـ deployment\n+ لا latency بين الخدمات\n- صعب التوسع الانتقائي\n- كل شيء مترابط\n\nMicroservices:\n+ توسع انتقائي لكل خدمة\n+ استقلالية الفرق والـ deployment\n- تعقيد في الـ communication\n- حاجة لـ API Gateway, Service Discovery\n- Distributed transactions أصعب\n\nالتوصية: ابدأ Monolith، وانتقل لـ Microservices عند الحاجة الفعلية"
+      },
+      {
+        "q": "ما هي HTTP Status Codes المهمة لـ API؟",
+        "a": "2xx - نجاح:\n200 OK, 201 Created, 204 No Content\n\n4xx - خطأ العميل:\n400 Bad Request (بيانات غلط)\n401 Unauthorized (غير مُعرَّف)\n403 Forbidden (معروف لكن لا صلاحية)\n404 Not Found\n409 Conflict (تعارض البيانات)\n422 Unprocessable Entity (validation error)\n429 Too Many Requests\n\n5xx - خطأ السيرفر:\n500 Internal Server Error\n503 Service Unavailable\n\nمهم: 401 vs 403\n401 = من أنت؟ (سجّل دخولك)\n403 = أعرف من أنت، لكن لا تملك الصلاحية"
+      }
+    ]
+  },
+  {
+    "id": "system-design",
+    "label": "System Design",
+    "icon": "🔵",
+    "color": "#2979FF",
+    "questions": [
+      {
+        "q": "كيف تصمم نظاماً يتحمل ملايين المستخدمين؟",
+        "a": "1. Load Balancing: توزيع الـ requests على عدة servers\n2. Horizontal Scaling: إضافة servers بدلاً من تقوية واحد\n3. Caching Layer: Redis/Memcached لتقليل الضغط على DB\n4. CDN: للـ static content\n5. Database:\n   • Read Replicas: توزيع القراءة\n   • Sharding: توزيع البيانات\n6. Async Processing: Queues للعمليات الثقيلة\n7. Database Connection Pooling\n8. Microservices: فصل الخدمات للتوسع الانتقائي"
+      },
+      {
+        "q": "ما هو CAP Theorem؟",
+        "a": "في نظام موزّع، لا يمكنك ضمان الثلاثة معاً:\n\nC - Consistency: كل node يرى نفس البيانات\nA - Availability: كل request يحصل على response\nP - Partition Tolerance: النظام يعمل رغم انقطاع الشبكة\n\nالـ Partition حتمي في الأنظمة الموزعة، فالاختيار بين:\n• CP (مثل MongoDB, Redis): الاتساق على حساب التوفر\n• AP (مثل Cassandra, CouchDB): التوفر على حساب الاتساق\n\nمعظم الأنظمة الحديثة تختار AP مع eventual consistency"
+      },
+      {
+        "q": "كيف تصمم نظام تخزين ملفات قابل للتوسع؟",
+        "a": "المكونات:\n1. Object Storage: S3/Google Cloud Storage (لا local storage)\n2. CDN: CloudFront/Cloudflare لتوصيل سريع\n3. Metadata DB: معلومات الملفات في SQL/NoSQL\n4. Processing Queue: ضغط صور، تحويل صيغ بالـ background\n\nتصميم الـ Upload:\n• Presigned URLs: العميل يرفع مباشرة لـ S3 (لا يمر بسيرفرك)\n• Chunked Upload للملفات الكبيرة\n• Virus Scanning قبل الحفظ النهائي\n\nفي Laravel: Storage::disk('s3')->put(...)"
+      }
+    ]
+  },
+  {
+    "id": "nodejs",
+    "label": "Node.js",
+    "icon": "🟡",
+    "color": "#F7DF1E",
+    "questions": [
+      {
+        "q": "كيف يعمل Event Loop في Node.js؟",
+        "a": "Node.js يعمل على خيط واحد (Single Thread) لكنه غير متزامن بفضل Event Loop.\n\nمراحل Event Loop بالترتيب:\n1. timers: تنفيذ setTimeout و setInterval\n2. I/O callbacks: callbacks من عمليات I/O\n3. idle/prepare: داخلي\n4. poll: انتظار أحداث I/O جديدة\n5. check: تنفيذ setImmediate\n6. close callbacks: مثل socket.on('close')\n\nالفرق بين setTimeout و setImmediate:\n• setTimeout(fn, 0): ينفّذ في مرحلة timers\n• setImmediate(fn): ينفّذ في مرحلة check (أسرع في I/O context)\n\nprocess.nextTick: ينفّذ قبل الانتقال لأي مرحلة (أولوية قصوى)"
+      },
+      {
+        "q": "ما الفرق بين Callback و Promise و Async/Await؟",
+        "a": "Callback (القديم):\nfs.readFile('file', (err, data) => {\n  if (err) throw err;\n  // Callback Hell إذا تداخلت\n});\n\nPromise:\nfs.promises.readFile('file')\n  .then(data => ...)\n  .catch(err => ...);\n\nAsync/Await (الأفضل):\ntry {\n  const data = await fs.promises.readFile('file');\n} catch (err) { ... }\n\nالأداء: متطابق تقريباً، لكن Async/Await أوضح وأسهل في الـ debugging\nمشكلة شائعة: await داخل forEach لا يعمل كما تتوقع — استخدم for...of"
+      },
+      {
+        "q": "ما هو Cluster Module ولماذا نستخدمه؟",
+        "a": "Node.js يعمل على core واحد افتراضياً. Cluster يُمكّنه من استخدام كل cores الـ CPU.\n\nconst cluster = require('cluster');\nconst numCPUs = require('os').cpus().length;\n\nif (cluster.isPrimary) {\n  for (let i = 0; i < numCPUs; i++) {\n    cluster.fork(); // ينشئ Worker process\n  }\n} else {\n  // كود السيرفر هنا\n  app.listen(3000);\n}\n\nالبديل الحديث: PM2 يدير الـ clustering تلقائياً\npm2 start app.js -i max"
+      },
+      {
+        "q": "ما هو Stream في Node.js وما فائدته؟",
+        "a": "Stream = معالجة البيانات قطعة قطعة بدلاً من تحميلها كاملة في الذاكرة.\n\nأنواع Streams:\n• Readable: قراءة بيانات (fs.createReadStream)\n• Writable: كتابة بيانات (fs.createWriteStream)\n• Duplex: قراءة وكتابة (TCP socket)\n• Transform: تحويل البيانات (zlib, crypto)\n\nمثال عملي — رفع ملف كبير:\n// ❌ بدون Stream: يحمّل الملف كله في RAM\n// ✅ مع Stream:\nfs.createReadStream('bigfile.csv')\n  .pipe(csvParser())\n  .pipe(dbWriteStream);\n\nالفائدة: ذاكرة ثابتة حتى مع ملفات ضخمة"
+      },
+      {
+        "q": "ما الفرق بين require و import في Node.js؟",
+        "a": "require (CommonJS — الافتراضي في Node):\n• متزامن (Synchronous)\n• يمكن استخدامه في أي مكان بالكود\n• const express = require('express')\n\nimport (ES Modules):\n• غير متزامن (Asynchronous)\n• يجب أن يكون في أعلى الملف\n• import express from 'express'\n• يحتاج \"type\": \"module\" في package.json أو امتداد .mjs\n\nالتوجه الحديث: ES Modules هو المستقبل، لكن CommonJS لا يزال شائعاً جداً"
+      },
+      {
+        "q": "كيف تتعامل مع Memory Leaks في Node.js؟",
+        "a": "أسباب شائعة للـ Memory Leaks:\n1. Event Listeners لم تُزل (emitter.removeListener)\n2. Closures تحتفظ بـ references غير ضرورية\n3. Global variables تتراكم\n4. Caching بدون حد أقصى\n\nأدوات الكشف:\n• process.memoryUsage() للمراقبة\n• --inspect flag مع Chrome DevTools\n• clinic.js أو 0x للتحليل العميق\n• heapdump لتحليل الـ heap\n\nنصيحة: استخدم WeakMap/WeakSet للـ caches — تُفرغ تلقائياً مع Garbage Collection"
+      },
+      {
+        "q": "ما هو Middleware في Express وكيف يعمل؟",
+        "a": "Middleware = دالة تُنفَّذ بين استقبال الـ request وإرسال الـ response.\n\nالتوقيع: (req, res, next) => { ... }\n\nأنواع:\n1. Application-level: app.use(fn)\n2. Router-level: router.use(fn)\n3. Error-handling: (err, req, res, next) => {}\n4. Built-in: express.json(), express.static()\n5. Third-party: cors(), helmet(), morgan()\n\nالترتيب مهم جداً — يُنفَّذ بالتسلسل:\napp.use(logger);      // 1\napp.use(auth);        // 2\napp.use('/api', router); // 3\n\nلا تنسَ استدعاء next() وإلا الـ request سيتوقف"
+      },
+      {
+        "q": "كيف تحمي Node.js API من الهجمات الشائعة؟",
+        "a": "1. Helmet: يضبط HTTP headers الأمنية\n   app.use(helmet())\n\n2. Rate Limiting:\n   app.use(rateLimit({ windowMs: 15*60*1000, max: 100 }))\n\n3. CORS صحيح:\n   app.use(cors({ origin: 'https://myapp.com' }))\n\n4. Input Validation:\n   Joi أو Zod لـ validate كل input\n\n5. SQL/NoSQL Injection:\n   استخدم parameterized queries دائماً\n\n6. JWT Secrets قوية + انتهاء صلاحية قصير\n\n7. لا تُظهر stack traces في الـ production\n\n8. حدّث dependencies دورياً (npm audit)"
+      },
+      {
+        "q": "ما الفرق بين process.nextTick و setImmediate و setTimeout(fn, 0)؟",
+        "a": "ترتيب التنفيذ:\n1. process.nextTick ← ينفّذ فوراً بعد انتهاء الكود الحالي (قبل Event Loop)\n2. Promise.then ← Microtask queue (بعد nextTick)\n3. setImmediate ← في مرحلة check من Event Loop\n4. setTimeout(fn, 0) ← في مرحلة timers (قد يكون بعد setImmediate)\n\nمثال:\nsetTimeout(() => console.log('timeout'), 0);\nsetImmediate(() => console.log('immediate'));\nprocess.nextTick(() => console.log('nextTick'));\nPromise.resolve().then(() => console.log('promise'));\n\nالنتيجة:\nnextTick → promise → immediate → timeout\n\nاستخدم process.nextTick بحذر — يمكن أن يُعيق Event Loop إذا أُسيء استخدامه"
+      },
+      {
+        "q": "ما هو Worker Threads وكيف يختلف عن Cluster؟",
+        "a": "Cluster:\n• يُنشئ processes مستقلة كاملة\n• كل process له memory منفصلة\n• مثالي لتوزيع HTTP requests\n\nWorker Threads:\n• خيوط داخل نفس الـ process\n• تشارك الـ memory (SharedArrayBuffer)\n• مثالي للـ CPU-intensive tasks\n\nconst { Worker } = require('worker_threads');\nconst worker = new Worker('./heavy-task.js');\nworker.on('message', (result) => console.log(result));\n\nمتى تستخدم كل؟\n• Cluster: scaling الـ API server\n• Worker Threads: معالجة صور، encryption، ML inference"
+      }
+    ]
+  },
+  {
+    "id": "react",
+    "label": "React",
+    "icon": "⚛️",
+    "color": "#61DAFB",
+    "questions": [
+      {
+        "q": "كيف يعمل Virtual DOM وما فائدته؟",
+        "a": "Virtual DOM = نسخة خفيفة من الـ DOM الحقيقي محفوظة في الذاكرة.\n\nكيف يعمل:\n1. عند تغيّر الـ state، React يبني Virtual DOM جديد\n2. يقارنه مع القديم (Diffing Algorithm)\n3. يُطبّق فقط التغييرات على الـ DOM الحقيقي (Reconciliation)\n\nالفائدة: تلاعب الـ DOM الحقيقي بطيء — Virtual DOM يُقلّل العمليات للحد الأدنى\n\nملاحظة: React 18 مع Concurrent Mode يُحسّن هذا أكثر بـ Time Slicing"
+      },
+      {
+        "q": "ما الفرق بين useEffect و useLayoutEffect؟",
+        "a": "useEffect:\n• يُنفَّذ بعد أن يُرسَم الـ component للشاشة (asynchronously)\n• لا يُعيق الـ rendering\n• مناسب للـ: API calls، subscriptions، timers\n\nuseLayoutEffect:\n• يُنفَّذ بعد الـ DOM mutations لكن قبل أن يرى المستخدم التغيير (synchronously)\n• يُعيق الـ rendering حتى ينتهي\n• مناسب للـ: قراءة أبعاد الـ DOM، تعديلات بصرية فورية\n\nالقاعدة: استخدم useEffect دائماً إلا إذا لاحظت وميضاً بصرياً (flicker)"
+      },
+      {
+        "q": "اشرح React Reconciliation و Fiber Architecture",
+        "a": "Reconciliation: عملية مقارنة الـ Virtual DOM القديم بالجديد لتحديد التغييرات\n\nقواعد Diffing:\n• عناصر من نوع مختلف → إعادة بناء كاملة\n• عناصر من نفس النوع → تحديث الخصائص فقط\n• key prop → يُساعد React على تتبع العناصر في القوائم\n\nReact Fiber (React 16+):\n• إعادة كتابة كاملة للـ reconciliation engine\n• يُقسّم العمل إلى وحدات صغيرة (fibers)\n• يدعم إيقاف العمل واستئنافه (Concurrent Features)\n• يُتيح: Suspense، Transitions، Time Slicing"
+      },
+      {
+        "q": "ما هو useMemo و useCallback ومتى تستخدمهما؟",
+        "a": "useMemo: يحفظ نتيجة حسابٍ ثقيل\nconst sorted = useMemo(() => heavySort(list), [list]);\n// يُعيد الحساب فقط إذا تغيّر list\n\nuseCallback: يحفظ دالة لمنع إعادة إنشائها\nconst handleClick = useCallback(() => {\n  doSomething(id);\n}, [id]);\n\nمتى تستخدمهما؟\n✅ دوال تُمرَّر كـ props لـ components محمية بـ React.memo\n✅ حسابات ثقيلة فعلاً (ترتيب، فلترة قوائم ضخمة)\n✅ dependencies في useEffect\n\n❌ لا تستخدمهما في كل مكان — التحسين المبكر مشكلة بحد ذاتها"
+      },
+      {
+        "q": "ما هو React.memo وكيف يختلف عن useMemo؟",
+        "a": "React.memo: يمنع إعادة render الـ component إذا لم تتغيّر الـ props\nconst MyComponent = React.memo(({ name }) => {\n  return <div>{name}</div>;\n});\n\nuseMemo: يحفظ نتيجة حساب داخل component\n\nالفرق:\n• React.memo → يحفظ الـ component نفسه\n• useMemo → يحفظ قيمة داخل الـ component\n\nمشكلة شائعة:\nReact.memo بلا فائدة إذا مررت object أو function جديدة في كل render\nالحل: استخدم useMemo/useCallback مع props التي تُمرّرها"
+      },
+      {
+        "q": "ما هو Context API وما حدوده مقارنةً بـ Redux؟",
+        "a": "Context API:\n• مناسب لبيانات قليلة التغيير: theme، language، user\n• بسيط بدون مكتبات إضافية\n• مشكلة: كل consumer يُعاد render عند أي تغيير في الـ context\n\nRedux (أو Zustand/Jotai):\n• مناسب لـ state معقد وكثير التغيير\n• DevTools ممتازة لتتبع التغييرات\n• Selectors تمنع re-renders غير ضرورية\n• أثقل في الـ boilerplate\n\nالتوجه الحديث:\n• Zustand أو Jotai بدلاً من Redux للتبسيط\n• Context للـ static/slow-changing data فقط"
+      },
+      {
+        "q": "كيف تتعامل مع Code Splitting و Lazy Loading؟",
+        "a": "Code Splitting: تقسيم الـ bundle إلى أجزاء تُحمّل عند الحاجة\n\nReact.lazy + Suspense:\nconst Dashboard = React.lazy(() => import('./Dashboard'));\n\nfunction App() {\n  return (\n    <Suspense fallback={<Spinner />}>\n      <Dashboard />\n    </Suspense>\n  );\n}\n\nRoute-based splitting (أفضل استراتيجية):\nكل صفحة/route لها bundle منفصل\n\nDynamic imports:\nconst chart = await import('heavy-chart-lib');\n\nالفائدة: تسريع Initial Load Time بشكل كبير"
+      },
+      {
+        "q": "ما هو الفرق بين Controlled و Uncontrolled Components؟",
+        "a": "Controlled Component:\nالـ state في React يتحكم بقيمة الـ input\n<input value={name} onChange={e => setName(e.target.value)} />\n✅ مصدر حقيقة واحد، تحقق فوري، سهل الاختبار\n\nUncontrolled Component:\nالـ DOM يتحكم بالقيمة، نقرأها بـ ref\nconst inputRef = useRef();\n<input ref={inputRef} />\nconst value = inputRef.current.value;\n✅ أبسط للنماذج غير المعقدة\n❌ أصعب في التحقق الفوري\n\nReact Hook Form: يستخدم Uncontrolled internally للأداء لكن يوفر واجهة Controlled"
+      },
+      {
+        "q": "ما هو Suspense و Concurrent Mode في React 18؟",
+        "a": "Concurrent Mode: React يستطيع إيقاف وإستئناف وإلغاء الـ rendering\n\nالميزات الجديدة في React 18:\n• useTransition: تمييز updates غير عاجلة\n  const [isPending, startTransition] = useTransition();\n  startTransition(() => setFilter(value));\n\n• useDeferredValue: تأجيل تحديث قيمة\n  const deferred = useDeferredValue(searchTerm);\n\n• Automatic Batching: تجميع setStates تلقائياً حتى في async\n\nSuspense للبيانات (مع frameworks):\n<Suspense fallback={<Loading />}>\n  <DataComponent /> {/* يُعلّق حتى تُحمّل البيانات */}\n</Suspense>"
+      },
+      {
+        "q": "ما هي Custom Hooks وكيف تصممها؟",
+        "a": "Custom Hook = دالة تبدأ بـ use وتحتوي hooks أخرى، تُعيد استخدام الـ stateful logic.\n\nمثال — useFetch:\nfunction useFetch(url) {\n  const [data, setData] = useState(null);\n  const [loading, setLoading] = useState(true);\n  const [error, setError] = useState(null);\n\n  useEffect(() => {\n    fetch(url)\n      .then(r => r.json())\n      .then(setData)\n      .catch(setError)\n      .finally(() => setLoading(false));\n  }, [url]);\n\n  return { data, loading, error };\n}\n\n// الاستخدام:\nconst { data, loading } = useFetch('/api/users');\n\nأمثلة شائعة: useDebounce، useLocalStorage، useWindowSize، useIntersectionObserver"
+      }
+    ]
+  },
+  {
+    "id": "react-native",
+    "label": "React Native",
+    "icon": "📱",
+    "color": "#00D8FF",
+    "questions": [
+      {
+        "q": "كيف يعمل React Native — ما هو Bridge وما بعده؟",
+        "a": "Architecture القديمة (Bridge):\nJS Thread ←→ Bridge (JSON serialization) ←→ Native Thread\nالمشكلة: الـ Bridge يُسبّب تأخيراً وازدحاماً خصوصاً في الـ animations\n\nArchitecture الجديدة (New Architecture - RN 0.71+):\n• JSI (JS Interface): تواصل مباشر بين JS وـ C++ بدون serialization\n• Fabric: renderer جديد أسرع (synchronous)\n• TurboModules: تحميل Native Modules عند الطلب فقط\n• Codegen: توليد كود آمن من TypeScript specs\n\nالنتيجة: أداء أقرب للـ native، رسوم متحركة أسلس"
+      },
+      {
+        "q": "ما الفرق بين React Native CLI و Expo؟",
+        "a": "Expo:\n✅ إعداد سريع، بدون Xcode/Android Studio\n✅ OTA Updates (تحديث بدون App Store)\n✅ مكتبات جاهزة (camera, location...)\n❌ حجم تطبيق أكبر\n❌ محدودية في Native modules مخصصة\n❌ Expo Go له قيود في الـ production\n\nReact Native CLI:\n✅ تحكم كامل في الـ native code\n✅ أي native library\n✅ حجم تطبيق أصغر\n❌ يحتاج إعداد Xcode + Android Studio\n❌ أصعب في البداية\n\nالتوصية: Expo (Bare Workflow) — تجمع بين مزايا الاثنين"
+      },
+      {
+        "q": "كيف تُحسّن أداء React Native؟",
+        "a": "1. FlatList بدلاً من ScrollView للقوائم الطويلة:\n   keyExtractor، getItemLayout، initialNumToRender\n\n2. Hermes Engine: تفعيله لتسريع JS execution وتقليل الـ memory\n\n3. تجنّب Anonymous Functions في render:\n   // ❌ onPress={() => handle(item)}\n   // ✅ const handlePress = useCallback(...)\n\n4. useNativeDriver: true في الـ animations\n\n5. InteractionManager: تأجيل العمليات الثقيلة بعد الـ animation\n\n6. React.memo + useMemo للـ components الثقيلة\n\n7. Reanimated 2: animations تعمل على UI Thread مباشرة\n\n8. تقليل bridge calls في الـ loops"
+      },
+      {
+        "q": "ما هو Metro Bundler وكيف يعمل؟",
+        "a": "Metro هو الـ JavaScript bundler الخاص بـ React Native (مثل Webpack).\n\nمهامه:\n• يجمع كل ملفات JS والـ assets في bundle واحد\n• يدعم Fast Refresh (تحديث فوري بدون فقدان الـ state)\n• يحوّل JSX و TypeScript\n• يدير الـ module resolution\n\nالتحسينات:\n• RAM Bundles: تحميل modules عند الطلب (للتطبيقات الكبيرة)\n• Inline Requires: تأجيل تحميل الـ modules\n• Source Maps للـ debugging"
+      },
+      {
+        "q": "كيف تتعامل مع Navigation في React Native؟",
+        "a": "React Navigation (الأكثر شيوعاً):\n\nأنواع الـ Navigators:\n• Stack Navigator: شاشات فوق بعض (push/pop)\n• Tab Navigator: تبويبات سفلية\n• Drawer Navigator: قائمة جانبية\n• Bottom Sheet Navigator\n\nأفضل ممارسات:\n• nested navigators للتطبيقات المعقدة\n• navigationRef للتنقل خارج الـ components\n• Deep Linking لفتح شاشات من links خارجية\n• TypeScript مع typed params لمنع الأخطاء\n\nالبديل: Expo Router (file-based routing مثل Next.js)"
+      },
+      {
+        "q": "ما الفرق بين StyleSheet.create و inline styles؟",
+        "a": "Inline styles:\n<View style={{ flex: 1, backgroundColor: 'red' }} />\n• object جديد في كل render\n• أبطأ قليلاً\n\nStyleSheet.create:\nconst styles = StyleSheet.create({ container: { flex: 1 } });\n<View style={styles.container} />\n\nالمزايا:\n• يُنشأ مرة واحدة ويُخزَّن\n• validation في development\n• إرسال الـ ID بدلاً من الـ object عبر Bridge (في الـ old architecture)\n• أسرع وأنظف\n\nملاحظة: لا تفرق كبيرة في الـ new architecture، لكن StyleSheet لا يزال الممارسة الأفضل للنظافة"
+      },
+      {
+        "q": "كيف تتعامل مع الـ Platform Differences؟",
+        "a": "Platform module:\nimport { Platform } from 'react-native';\n\nconst styles = {\n  padding: Platform.OS === 'ios' ? 20 : 16,\n  ...Platform.select({\n    ios: { shadowColor: '#000' },\n    android: { elevation: 4 },\n  }),\n};\n\nPlatform-specific files:\nComponent.ios.js  ← يُحمَّل على iOS\nComponent.android.js  ← يُحمَّل على Android\n\nSafe Area:\nimport { useSafeAreaInsets } from 'react-native-safe-area-context';\n// للتعامل مع notch وـ home indicator\n\nStatusBar: ضبطها لكل شاشة حسب الـ design"
+      },
+      {
+        "q": "ما هو Reanimated وكيف يختلف عن Animated API؟",
+        "a": "Animated API (built-in):\n• الـ animations تعمل على JS Thread\n• إذا كان الـ JS thread مشغولاً → animation تتأتأ\n• useNativeDriver: true يحسّن الوضع لكن مع قيود\n\nReact Native Reanimated 2:\n• الـ animations تعمل على UI Thread مباشرة (بلا bridge)\n• أداء مثالي حتى مع JS thread مشغول\n• worklets: كود JS يعمل على UI Thread\n\nمثال:\nconst offset = useSharedValue(0);\nconst animatedStyles = useAnimatedStyle(() => ({\n  transform: [{ translateX: offset.value }],\n}));\n\nGesture Handler: يُكمل Reanimated لـ gestures سلسة"
+      },
+      {
+        "q": "كيف تتعامل مع الـ State Management في React Native؟",
+        "a": "نفس خيارات React مع اعتبارات إضافية:\n\nللـ state البسيط: useState + Context\n\nللـ state المعقد:\n• Zustand (الأخف والأبسط)\n• Redux Toolkit (للمشاريع الكبيرة)\n• Jotai/Recoil (atomic state)\n\nللـ Server State:\n• TanStack Query (React Query) — الأفضل للـ API calls\n• يدير caching، loading، error، refetching تلقائياً\n\nللـ Persistence (حفظ بين الجلسات):\n• AsyncStorage: بسيط، للبيانات الصغيرة\n• MMKV: أسرع بـ 10x من AsyncStorage (مُوصى به)\n• WatermelonDB: قواعد بيانات معقدة"
+      },
+      {
+        "q": "كيف تتعامل مع Push Notifications؟",
+        "a": "الأدوات:\n• Expo Notifications: الأسهل مع Expo\n• Firebase Cloud Messaging (FCM): Android + iOS\n• APNs: لـ iOS مباشرة\n\nالخطوات الأساسية:\n1. طلب إذن المستخدم\n2. الحصول على Device Token\n3. إرسال Token للـ backend\n4. Backend يرسل notification عبر FCM/APNs\n\nالتعامل مع الـ states:\n• Foreground: التطبيق مفتوح\n• Background: التطبيق في الخلفية\n• Quit: التطبيق مغلق تماماً\n\nكل state يحتاج معالجة مختلفة للـ notification"
+      }
+    ]
+  },
+  {
+    "id": "testing",
+    "label": "Testing & Security",
+    "icon": "🟣",
+    "color": "#AA00FF",
+    "questions": [
+      {
+        "q": "ما الفرق بين Unit Test و Feature Test و Integration Test؟",
+        "a": "Unit Test:\n• اختبار وحدة واحدة معزولة (method/class)\n• سريع جداً، لا يحتاج DB أو external services\n• يستخدم Mocking\n\nFeature Test (في Laravel):\n• اختبار feature كاملة من HTTP request لـ response\n• يستخدم DB الفعلية (عادة SQLite in-memory)\n• php artisan test\n\nIntegration Test:\n• اختبار تكامل عدة مكونات\n• أبطأ من Unit لكن أشمل\n\nالتوصية: اكتب Unit للـ business logic، Feature للـ API endpoints"
+      },
+      {
+        "q": "ما هو SQL Injection وكيف تمنعه في Laravel؟",
+        "a": "SQL Injection: مهاجم يُدرج SQL code في input المستخدم\n\nمثال الهجوم:\nUsername: admin' OR '1'='1\n\nالحماية في Laravel:\n1. Eloquent ORM: محمي تلقائياً\n2. Query Builder مع bindings:\n   DB::select('SELECT * FROM users WHERE id = ?', [$id])\n3. لا تستخدم DB::raw() مع input المستخدم مباشرة\n\nأبداً لا تكتب:\nDB::select(\"SELECT * FROM users WHERE id = $id\") ❌"
+      },
+      {
+        "q": "ما هو XSS وكيف تحميه في Laravel؟",
+        "a": "XSS (Cross-Site Scripting): حقن JavaScript ضار في الصفحة\n\nفي Blade:\n• {{ $data }} → هروب تلقائي ✅\n• {!! $data !!} → بدون هروب (خطر!) ⚠️\n\nالحماية إضافية:\n• Content Security Policy headers\n• HttpOnly Cookies\n• Validate وSanitize كل input\n• استخدم {!! !!} فقط لـ HTML موثوق من نظامك"
+      }
+    ]
+  }
+]

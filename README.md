@@ -34,10 +34,14 @@ project/
 2. Run `docker-compose up --build`
 3. Open your browser to `http://localhost:5173`
 
-### API
+### Seeding the Database
 
-- Backend runs on `http://localhost:3000`
-- Health check: `GET /api/health`
+To populate the database with initial interview guide data:
+
+```bash
+cd backend
+node src/seed-data.js
+```
 
 ## Development
 
