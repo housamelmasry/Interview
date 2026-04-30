@@ -14,6 +14,7 @@ const db = new sqlite3.Database(dbPath, (err) => {
     console.error("Error opening database:", err.message);
   } else {
     console.log("Connected to SQLite database.");
+    db.run("PRAGMA foreign_keys = ON;");
     initializeDatabase();
   }
 });
@@ -43,7 +44,7 @@ function initializeDatabase() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         category_id TEXT NOT NULL,
         question_text TEXT NOT NULL,
-        FOREIGN KEY (category_id) REFERENCES categories (id)
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE CASCADE
       )
     `,
         (err) => {
@@ -59,7 +60,7 @@ function initializeDatabase() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           question_id INTEGER NOT NULL,
           answer_text TEXT NOT NULL,
-          FOREIGN KEY (question_id) REFERENCES questions (id)
+          FOREIGN KEY (question_id) REFERENCES questions (id) ON DELETE CASCADE
         )
       `,
             (err) => {
