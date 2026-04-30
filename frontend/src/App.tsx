@@ -35,6 +35,9 @@ export default function InterviewGuide() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Theme State
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
   // Manage Mode States
   const [isManageMode, setIsManageMode] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -174,15 +177,33 @@ export default function InterviewGuide() {
 
   const totalQ = questions.length;
 
+  const theme = {
+    bg: isDarkMode ? "#0d0d0d" : "#f5f7fa",
+    text: isDarkMode ? "#e8e8e8" : "#2c3e50",
+    headerBg: isDarkMode 
+      ? "linear-gradient(135deg, #1a0533 0%, #0d1a2e 50%, #0d0d0d 100%)"
+      : "linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%)",
+    cardBg: isDarkMode ? "#111" : "#ffffff",
+    cardBgOpen: isDarkMode ? "#141414" : "#f9f9f9",
+    border: isDarkMode ? "#1e1e1e" : "#e1e8ed",
+    tabBg: isDarkMode ? "#0f0f0f" : "#ffffff",
+    searchBg: isDarkMode ? "#1a1a1a" : "#ffffff",
+    searchBorder: isDarkMode ? "#333" : "#d1d8e0",
+    footerText: isDarkMode ? "#333" : "#aaa",
+    subText: isDarkMode ? "#555" : "#7f8c8d",
+    mutedText: isDarkMode ? "#666" : "#95a5a6",
+    answerText: isDarkMode ? "#c8c8c8" : "#4b5563",
+  };
+
   if (loading && questions.length === 0) {
     return (
       <div
         style={{
           fontFamily: "'Tajawal', 'Cairo', sans-serif",
           direction: "rtl",
-          background: "#0d0d0d",
+          background: theme.bg,
           minHeight: "100vh",
-          color: "#e8e8e8",
+          color: theme.text,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -202,9 +223,11 @@ export default function InterviewGuide() {
       style={{
         fontFamily: "'Tajawal', 'Cairo', sans-serif",
         direction: "rtl",
-        background: "#0d0d0d",
+        background: theme.bg,
         minHeight: "100vh",
-        color: "#e8e8e8",
+        width: "100%",
+        color: theme.text,
+        transition: "all 0.3s ease",
       }}
     >
       <link
@@ -215,37 +238,52 @@ export default function InterviewGuide() {
       {/* Header */}
       <div
         style={{
-          background:
-            "linear-gradient(135deg, #1a0533 0%, #0d1a2e 50%, #0d0d0d 100%)",
+          background: theme.headerBg,
           padding: "2.5rem 2rem 2rem",
-          borderBottom: "1px solid #222",
+          borderBottom: `1px solid ${theme.border}`,
           textAlign: "center",
           position: "relative"
         }}
       >
-        <button 
-          onClick={() => setIsManageMode(!isManageMode)}
-          style={{
-            position: "absolute",
-            top: "1rem",
-            left: "1rem",
-            padding: "0.4rem 0.8rem",
-            background: isManageMode ? "#ff4444" : "#333",
-            color: "white",
-            border: "none",
-            borderRadius: "4px",
-            fontSize: "0.7rem",
-            cursor: "pointer"
-          }}
-        >
-          {isManageMode ? "إغلاق الإدارة" : "وضع الإدارة"}
-        </button>
+        <div style={{ position: "absolute", top: "1rem", left: "1rem", display: "flex", gap: "0.5rem" }}>
+          <button 
+            onClick={() => setIsDarkMode(!isDarkMode)}
+            style={{
+              padding: "0.4rem 0.8rem",
+              background: isDarkMode ? "#333" : "#fff",
+              color: isDarkMode ? "white" : "#333",
+              border: `1px solid ${theme.border}`,
+              borderRadius: "4px",
+              fontSize: "0.7rem",
+              cursor: "pointer",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            }}
+          >
+            {isDarkMode ? "☀️ وضع النهار" : "🌙 وضع الليل"}
+          </button>
+          
+          <button 
+            onClick={() => setIsManageMode(!isManageMode)}
+            style={{
+              padding: "0.4rem 0.8rem",
+              background: isManageMode ? "#ff4444" : isDarkMode ? "#333" : "#fff",
+              color: isManageMode ? "white" : isDarkMode ? "white" : "#333",
+              border: `1px solid ${theme.border}`,
+              borderRadius: "4px",
+              fontSize: "0.7rem",
+              cursor: "pointer",
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+            }}
+          >
+            {isManageMode ? "إغلاق الإدارة" : "وضع الإدارة"}
+          </button>
+        </div>
 
         <div
           style={{
             fontSize: "0.75rem",
             letterSpacing: "0.3em",
-            color: "#666",
+            color: theme.mutedText,
             marginBottom: "0.75rem",
             textTransform: "uppercase",
           }}
@@ -265,7 +303,7 @@ export default function InterviewGuide() {
         >
           Laravel · Node.js · React · React Native · Backend
         </h1>
-        <div style={{ color: "#555", marginTop: "0.5rem", fontSize: "0.9rem" }}>
+        <div style={{ color: theme.subText, marginTop: "0.5rem", fontSize: "0.9rem" }}>
           {totalQ} سؤال وإجابة موثّقة
         </div>
 
@@ -289,13 +327,14 @@ export default function InterviewGuide() {
                 width: "100%",
                 padding: "0.75rem 1.25rem",
                 borderRadius: "50px",
-                border: "1px solid #333",
-                background: "#1a1a1a",
-                color: "#e8e8e8",
+                border: `1px solid ${theme.searchBorder}`,
+                background: theme.searchBg,
+                color: theme.text,
                 fontSize: "0.95rem",
                 outline: "none",
                 boxSizing: "border-box",
                 textAlign: "right",
+                boxShadow: isDarkMode ? "none" : "0 4px 12px rgba(0,0,0,0.05)"
               }}
             />
           </div>
@@ -304,7 +343,7 @@ export default function InterviewGuide() {
 
       {/* Admin Controls */}
       {isManageMode && (
-        <div style={{ padding: "1rem", background: "#111", borderBottom: "1px solid #222", display: "flex", gap: "1rem", justifyContent: "center" }}>
+        <div style={{ padding: "1rem", background: theme.cardBg, borderBottom: `1px solid ${theme.border}`, display: "flex", gap: "1rem", justifyContent: "center" }}>
           <button 
             onClick={() => { setEditingCategory({ id: "", label: "", icon: "📁", color: "#666666" }); setShowCategoryForm(true); }}
             style={{ padding: "0.5rem 1rem", background: "#2ecc71", color: "white", border: "none", borderRadius: "4px", cursor: "pointer" }}
@@ -328,8 +367,8 @@ export default function InterviewGuide() {
             gap: "0.5rem",
             padding: "1.25rem 1.5rem",
             overflowX: "auto",
-            borderBottom: "1px solid #1a1a1a",
-            background: "#0f0f0f",
+            borderBottom: `1px solid ${theme.border}`,
+            background: theme.tabBg,
           }}
         >
           {categories.map((cat) => {
@@ -349,9 +388,9 @@ export default function InterviewGuide() {
                     borderRadius: "50px",
                     border: active
                       ? `1.5px solid ${cat.color}`
-                      : "1.5px solid #2a2a2a",
+                      : `1.5px solid ${theme.border}`,
                     background: active ? `${cat.color}18` : "transparent",
-                    color: active ? cat.color : "#666",
+                    color: active ? cat.color : theme.mutedText,
                     cursor: "pointer",
                     fontSize: "0.85rem",
                     fontWeight: active ? 700 : 400,
@@ -380,7 +419,7 @@ export default function InterviewGuide() {
       {/* Forms Overlay */}
       {(showCategoryForm || showQuestionForm) && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "1rem" }}>
-          <div style={{ background: "#1a1a1a", padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto" }}>
+          <div style={{ background: theme.bg, padding: "2rem", borderRadius: "12px", width: "100%", maxWidth: "500px", maxHeight: "90vh", overflowY: "auto", border: `1px solid ${theme.border}` }}>
             {showCategoryForm && editingCategory && (
               <form onSubmit={handleSaveCategory}>
                 <h2 style={{ marginTop: 0 }}>{categories.find(c => c.id === editingCategory.id) ? "تعديل تصنيف" : "تصنيف جديد"}</h2>
@@ -389,7 +428,7 @@ export default function InterviewGuide() {
                   <input 
                     value={editingCategory.id} 
                     onChange={e => setEditingCategory({...editingCategory, id: e.target.value})}
-                    style={{ width: "100%", padding: "0.5rem", background: "#333", border: "1px solid #444", color: "white", borderRadius: "4px" }}
+                    style={{ width: "100%", padding: "0.5rem", background: theme.cardBg, border: `1px solid ${theme.border}`, color: theme.text, borderRadius: "4px" }}
                     disabled={!!categories.find(c => c.id === editingCategory.id)}
                   />
                 </div>
@@ -398,7 +437,7 @@ export default function InterviewGuide() {
                   <input 
                     value={editingCategory.label} 
                     onChange={e => setEditingCategory({...editingCategory, label: e.target.value})}
-                    style={{ width: "100%", padding: "0.5rem", background: "#333", border: "1px solid #444", color: "white", borderRadius: "4px" }}
+                    style={{ width: "100%", padding: "0.5rem", background: theme.cardBg, border: `1px solid ${theme.border}`, color: theme.text, borderRadius: "4px" }}
                   />
                 </div>
                 <div style={{ marginBottom: "1rem", display: "flex", gap: "1rem" }}>
@@ -407,7 +446,7 @@ export default function InterviewGuide() {
                     <input 
                       value={editingCategory.icon} 
                       onChange={e => setEditingCategory({...editingCategory, icon: e.target.value})}
-                      style={{ width: "100%", padding: "0.5rem", background: "#333", border: "1px solid #444", color: "white", borderRadius: "4px" }}
+                      style={{ width: "100%", padding: "0.5rem", background: theme.cardBg, border: `1px solid ${theme.border}`, color: theme.text, borderRadius: "4px" }}
                     />
                   </div>
                   <div style={{ flex: 1 }}>
@@ -416,7 +455,7 @@ export default function InterviewGuide() {
                       type="color"
                       value={editingCategory.color} 
                       onChange={e => setEditingCategory({...editingCategory, color: e.target.value})}
-                      style={{ width: "100%", height: "38px", background: "#333", border: "1px solid #444", color: "white", borderRadius: "4px" }}
+                      style={{ width: "100%", height: "38px", background: theme.cardBg, border: `1px solid ${theme.border}`, color: theme.text, borderRadius: "4px" }}
                     />
                   </div>
                 </div>
@@ -435,7 +474,7 @@ export default function InterviewGuide() {
                   <select 
                     value={editingQuestion.category_id}
                     onChange={e => setEditingQuestion({...editingQuestion, category_id: e.target.value})}
-                    style={{ width: "100%", padding: "0.5rem", background: "#333", border: "1px solid #444", color: "white", borderRadius: "4px" }}
+                    style={{ width: "100%", padding: "0.5rem", background: theme.cardBg, border: `1px solid ${theme.border}`, color: theme.text, borderRadius: "4px" }}
                   >
                     {categories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
                   </select>
@@ -445,7 +484,7 @@ export default function InterviewGuide() {
                   <textarea 
                     value={editingQuestion.question_text} 
                     onChange={e => setEditingQuestion({...editingQuestion, question_text: e.target.value})}
-                    style={{ width: "100%", padding: "0.5rem", background: "#333", border: "1px solid #444", color: "white", borderRadius: "4px", minHeight: "80px" }}
+                    style={{ width: "100%", padding: "0.5rem", background: theme.cardBg, border: `1px solid ${theme.border}`, color: theme.text, borderRadius: "4px", minHeight: "80px" }}
                   />
                 </div>
                 <div style={{ marginBottom: "1rem" }}>
@@ -459,7 +498,7 @@ export default function InterviewGuide() {
                           newAnswers[idx] = { ...newAnswers[idx], answer_text: e.target.value };
                           setEditingQuestion({...editingQuestion, answers: newAnswers});
                         }}
-                        style={{ flex: 1, padding: "0.5rem", background: "#333", border: "1px solid #444", color: "white", borderRadius: "4px" }}
+                        style={{ flex: 1, padding: "0.5rem", background: theme.cardBg, border: `1px solid ${theme.border}`, color: theme.text, borderRadius: "4px" }}
                       />
                       <button 
                         type="button" 
@@ -479,7 +518,7 @@ export default function InterviewGuide() {
                       const newAnswers = [...(editingQuestion.answers || []), { id: Date.now(), question_id: editingQuestion.id || 0, answer_text: "" }];
                       setEditingQuestion({...editingQuestion, answers: newAnswers});
                     }}
-                    style={{ width: "100%", padding: "0.5rem", background: "#333", border: "1px dashed #555", color: "#aaa", borderRadius: "4px", cursor: "pointer" }}
+                    style={{ width: "100%", padding: "0.5rem", background: theme.cardBg, border: `1px dashed ${theme.mutedText}`, color: theme.mutedText, borderRadius: "4px", cursor: "pointer" }}
                   >
                     + إضافة إجابة أخرى
                   </button>
@@ -498,16 +537,14 @@ export default function InterviewGuide() {
       <div style={{ padding: "1.5rem", maxWidth: "860px", margin: "0 auto" }}>
         {search && (
           <div
-            style={{ color: "#555", fontSize: "0.85rem", marginBottom: "1rem" }}
+            style={{ color: theme.subText, fontSize: "0.85rem", marginBottom: "1rem" }}
           >
             نتائج البحث: {filtered.length} سؤال
           </div>
         )}
 
         {filtered.length === 0 && (
-          <div style={{ textAlign: "center", color: "#444", padding: "3rem" }}>
-            لا توجد نتائج
-          </div>
+          <div style={{ textAlign: "center", color: theme.mutedText, padding: "3rem" }}>لا توجد نتائج</div>
         )}
 
         {filtered.map((item, i) => {
@@ -517,11 +554,12 @@ export default function InterviewGuide() {
               key={i}
               style={{
                 marginBottom: "0.75rem",
-                border: `1px solid ${isOpen ? item.catColor + "44" : "#1e1e1e"}`,
+                border: `1px solid ${isOpen ? item.catColor + "44" : theme.border}`,
                 borderRadius: "12px",
                 overflow: "hidden",
-                background: isOpen ? "#141414" : "#111",
+                background: isOpen ? theme.cardBgOpen : theme.cardBg,
                 transition: "all 0.25s",
+                boxShadow: isDarkMode ? "none" : "0 2px 8px rgba(0,0,0,0.05)"
               }}
             >
               <div style={{ display: "flex", alignItems: "center" }}>
@@ -537,7 +575,7 @@ export default function InterviewGuide() {
                     border: "none",
                     cursor: "pointer",
                     textAlign: "right",
-                    color: "#e8e8e8",
+                    color: theme.text,
                     fontFamily: "inherit",
                     fontSize: "1rem",
                     fontWeight: 600,
@@ -605,7 +643,7 @@ export default function InterviewGuide() {
                           fontFamily: "inherit",
                           fontSize: "0.92rem",
                           lineHeight: 1.8,
-                          color: "#c8c8c8",
+                          color: theme.answerText,
                         }}
                       >
                         {answer.answer_text}
@@ -624,9 +662,9 @@ export default function InterviewGuide() {
         style={{
           textAlign: "center",
           padding: "2rem",
-          color: "#333",
+          color: theme.footerText,
           fontSize: "0.8rem",
-          borderTop: "1px solid #1a1a1a",
+          borderTop: `1px solid ${theme.border}`,
         }}
       >
         {totalQ} سؤال • Laravel · Node.js · React · React Native · Backend ·
